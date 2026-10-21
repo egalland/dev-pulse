@@ -61,6 +61,25 @@ async function githubDay(url) {
   }
 }
 
+async function githubWeek(url) {
+  const username = (url.searchParams.get("username") || "").trim();
+  const end = url.searchParams.get("end");
+  if (!username || !/^\d{4}-\d{2}-\d{2}$/.test(end || "")) return json({error:"Paramètres invalides"},400);
+  const endDate = new Date(`${end}T12:00:00Z`);
+  const dates = Array.from({length:7},(_,i)=>{const d=new Date(endDate);d.setUTCDate(d.getUTCDate()-6+i);return d.toISOString().slice(0,10)});
+  const headers = {Accept:"application/vnd.github+json","User-Agent":"Dev-Pulse-Site"};
+  try {
+    const days = await Promise.all(dates.map(async date => {
+      const query = encodeURIComponent(`author:${username} author-date:${date}`);
+      const response = await fetch(`https://api.github.com/search/commits?q=${query}&per_page=1`,{headers});
+      if (!response.ok) throw new Error(`GitHub ${response.status}`);
+      const search = await response.json();
+      return {date,commits:search.total_count||0};
+    }));
+    return json({days,partial:false});
+  } catch (error) { return json({error:error.message},502); }
+}
+
 async function mcp(request, env) {
   let body;
   try { body = await request.json(); } catch { return rpc(null,null,{code:-32700,message:"Invalid JSON"}); }
@@ -86,6 +105,7 @@ export default {
     if (request.method === "POST" && url.pathname === "/mcp") return mcp(request,env);
     if (request.method === "GET" && url.pathname === "/api/quota") return json(await readQuota(env));
     if (request.method === "GET" && url.pathname === "/api/github-day") return githubDay(url);
+    if (request.method === "GET" && url.pathname === "/api/github-week") return githubWeek(url);
     if (request.method === "GET" && url.pathname === "/") return new Response(PAGE_PLACEHOLDER,{headers:{"content-type":"text/html; charset=utf-8"}});
     return new Response("Not found",{status:404});
   }

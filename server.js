@@ -34,6 +34,26 @@ async function githubDay(url, res) {
   } catch (error) { return send(res,502,JSON.stringify({error:error.message}),types['.json']); }
 }
 
+async function githubWeek(url, res) {
+  const username = (url.searchParams.get('username') || '').trim();
+  const end = url.searchParams.get('end');
+  if (!username || !/^\d{4}-\d{2}-\d{2}$/.test(end || '')) return send(res,400,JSON.stringify({error:'Paramètres invalides'}),types['.json']);
+  const endDate = new Date(`${end}T12:00:00Z`);
+  const dates = Array.from({length:7},(_,i)=>{const d=new Date(endDate);d.setUTCDate(d.getUTCDate()-6+i);return d.toISOString().slice(0,10)});
+  const headers = {'Accept':'application/vnd.github+json','User-Agent':'Dev-Pulse-Local'};
+  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  try {
+    const days = await Promise.all(dates.map(async date => {
+      const query = encodeURIComponent(`author:${username} author-date:${date}`);
+      const response = await fetch(`https://api.github.com/search/commits?q=${query}&per_page=1`,{headers});
+      if (!response.ok) throw new Error(`GitHub ${response.status}`);
+      const search = await response.json();
+      return {date,commits:search.total_count||0};
+    }));
+    return send(res,200,JSON.stringify({days,partial:false}),types['.json']);
+  } catch (error) { return send(res,502,JSON.stringify({error:error.message}),types['.json']); }
+}
+
 http.createServer((req,res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname === '/api/quota') {
@@ -41,6 +61,7 @@ http.createServer((req,res) => {
     catch { return send(res, 503, JSON.stringify({connected:false,error:'Quota indisponible'}), types['.json']); }
   }
   if (url.pathname === '/api/github-day') return void githubDay(url,res);
+  if (url.pathname === '/api/github-week') return void githubWeek(url,res);
   const clean = decodeURIComponent(url.pathname);
   const requested = clean === '/' ? 'index.html' : clean.replace(/^\/+/, '');
   const file = path.resolve(root, requested);

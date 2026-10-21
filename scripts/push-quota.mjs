@@ -12,7 +12,7 @@ const body = {
 };
 const response = await fetch(input.mcpUrl,{
   method:"POST",
-  headers:{"content-type":"application/json","OAI-Sites-Authorization":input.siteToken},
+  headers:{"content-type":"application/json","OAI-Sites-Authorization":input.siteToken.startsWith("Bearer ")?input.siteToken:`Bearer ${input.siteToken}`},
   body:JSON.stringify(body)
 });
 const text = await response.text();
