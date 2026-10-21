@@ -68,7 +68,10 @@
           </div>
           <div class="metric-body">
             <strong id="commit-count">12</strong>
-            <div class="sparkbars" id="commit-bars" aria-label="Activité des 7 derniers jours"></div>
+            <div class="commit-detail">
+              <div class="code-stats"><span><b id="lines-added">+842</b> ajoutées</span><span><b id="lines-deleted">−126</b> supprimées</span></div>
+              <div class="sparkbars" id="commit-bars" aria-label="Activité des 7 derniers jours"></div>
+            </div>
           </div>
         </article>
 
@@ -140,7 +143,7 @@
       <div class="settings-head"><div><span class="panel-kicker">CONNEXIONS</span><h2>Réglages du tableau</h2></div><button class="close-btn" value="cancel" aria-label="Fermer">×</button></div>
       <label>Nom d’utilisateur GitHub<input id="github-username" autocomplete="off" placeholder="ex. torvalds"></label>
       <p class="hint">Le flux public GitHub est interrogé directement depuis ce navigateur. Aucun mot de passe ni token n’est stocké.</p>
-      <label>Nom affiché<input id="display-name" value="Fox" maxlength="24"></label>
+      <label>Nom affiché<input id="display-name" value="Emmanuel" maxlength="24"></label>
       <div class="bridge-box"><span class="bridge-state"></span><div><strong>Bridge Codex local</strong><p>Instantané intégré. Le connecteur automatique Raspberry Pi viendra dans l’étape suivante.</p></div></div>
       <div class="dialog-actions"><button value="cancel" class="ghost">Annuler</button><button value="default" id="save-settings" class="save">Enregistrer</button></div>
     </form>

@@ -4,7 +4,7 @@ Tableau de bord local pour suivre l’activité GitHub, les quotas Codex et les 
 
 ## Démarrer sur Windows
 
-Cliquez droit sur `start.ps1`, choisissez **Exécuter avec PowerShell**, puis ouvrez <http://localhost:8787>.
+Cliquez droit sur `start.ps1`, choisissez **Exécuter avec PowerShell**, puis ouvrez <http://localhost:8787>. Cette version locale active aussi le bridge privé de quota Codex, accessible uniquement depuis ce PC.
 
 Ou depuis PowerShell :
 
@@ -35,6 +35,6 @@ chromium --kiosk --app=http://localhost:8787
 ## État des données
 
 - **GitHub public** : réel et actualisé automatiquement après configuration.
-- **Quotas Codex** : instantané réel au moment de la création de cette version.
+- **Quotas Codex** : lus depuis `data/quota.json` par le bridge local. L’actualisation Codex met ce fichier à jour périodiquement.
 - **Chats et tâches** : instantané local représentatif.
 - **Historique** : interaction prête ; la persistance complète et l’accès aux dépôts privés nécessitent un petit service local de synchronisation, prévu pour la prochaine version.

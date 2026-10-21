@@ -3,4 +3,4 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $root
 Write-Host "Dev Pulse démarre sur http://localhost:8787" -ForegroundColor Green
 Write-Host "Laisse cette fenêtre ouverte. Ctrl+C pour arrêter." -ForegroundColor DarkGray
-python -m http.server 8787 --bind 0.0.0.0
+node "$root\server.js"
