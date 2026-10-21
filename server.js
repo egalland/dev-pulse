@@ -19,20 +19,18 @@ async function githubDay(url, res) {
   const headers = {'Accept':'application/vnd.github+json','User-Agent':'Dev-Pulse-Local'};
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   try {
-    const response = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}/events/public?per_page=100`,{headers});
+    const query = encodeURIComponent(`author:${username} author-date:${date}`);
+    const response = await fetch(`https://api.github.com/search/commits?q=${query}&per_page=100`,{headers});
     if (!response.ok) throw new Error(response.status === 404 ? 'Utilisateur GitHub introuvable' : `GitHub ${response.status}`);
-    const all = await response.json();
-    const events = all.filter(event => event.created_at?.slice(0,10) === date);
-    const commits = [];
-    for (const event of events.filter(event => event.type === 'PushEvent')) for (const commit of event.payload?.commits || []) commits.push({repo:event.repo.name,sha:commit.sha});
-    const unique = [...new Map(commits.map(commit => [`${commit.repo}:${commit.sha}`,commit])).values()];
-    const details = await Promise.all(unique.slice(0,30).map(async commit => {
+    const search = await response.json();
+    const commits = (search.items || []).map(commit => ({repo:commit.repository.full_name,sha:commit.sha}));
+    const details = await Promise.all(commits.slice(0,30).map(async commit => {
       const detail = await fetch(`https://api.github.com/repos/${commit.repo}/commits/${commit.sha}`,{headers});
       if (!detail.ok) return {additions:0,deletions:0};
       const body = await detail.json(); return body.stats || {additions:0,deletions:0};
     }));
     const stats = details.reduce((sum,item)=>({additions:sum.additions+(item.additions||0),deletions:sum.deletions+(item.deletions||0)}),{additions:0,deletions:0});
-    return send(res,200,JSON.stringify({date,commits:unique.length,additions:stats.additions,deletions:stats.deletions,events:events.length,partial:unique.length>30}),types['.json']);
+    return send(res,200,JSON.stringify({date,commits:search.total_count||0,additions:stats.additions,deletions:stats.deletions,partial:(search.total_count||0)>30}),types['.json']);
   } catch (error) { return send(res,502,JSON.stringify({error:error.message}),types['.json']); }
 }
 

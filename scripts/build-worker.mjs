@@ -15,5 +15,6 @@ const source = readFileSync(resolve(root,"worker/index.js"),"utf8")
 mkdirSync(resolve(root,"dist/server"),{recursive:true});
 mkdirSync(resolve(root,"dist/.openai"),{recursive:true});
 writeFileSync(resolve(root,"dist/server/index.js"),source);
+for (const asset of ["index.html","styles.css","app.js"]) cpSync(resolve(root,asset),resolve(root,"dist",asset));
 cpSync(resolve(root,".openai/hosting.json"),resolve(root,"dist/.openai/hosting.json"));
 console.log("Worker Dev Pulse construit.");

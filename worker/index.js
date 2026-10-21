@@ -37,6 +37,30 @@ async function updateQuota(env, args) {
   return {...payload,connected:true,ageSeconds:0};
 }
 
+async function githubDay(url) {
+  const username = (url.searchParams.get("username") || "").trim();
+  const date = url.searchParams.get("date");
+  if (!username || !/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return json({error:"Paramètres invalides"},400);
+  const headers = {Accept:"application/vnd.github+json","User-Agent":"Dev-Pulse-Site"};
+  try {
+    const query = encodeURIComponent(`author:${username} author-date:${date}`);
+    const response = await fetch(`https://api.github.com/search/commits?q=${query}&per_page=100`,{headers});
+    if (!response.ok) throw new Error(response.status === 404 ? "Utilisateur GitHub introuvable" : `GitHub ${response.status}`);
+    const search = await response.json();
+    const commits = (search.items || []).map(commit => ({repo:commit.repository.full_name,sha:commit.sha}));
+    const details = await Promise.all(commits.slice(0,30).map(async commit => {
+      const detail = await fetch(`https://api.github.com/repos/${commit.repo}/commits/${commit.sha}`,{headers});
+      if (!detail.ok) return {additions:0,deletions:0};
+      const body = await detail.json();
+      return body.stats || {additions:0,deletions:0};
+    }));
+    const stats = details.reduce((sum,item)=>({additions:sum.additions+(item.additions||0),deletions:sum.deletions+(item.deletions||0)}),{additions:0,deletions:0});
+    return json({date,commits:search.total_count||0,additions:stats.additions,deletions:stats.deletions,partial:(search.total_count||0)>30});
+  } catch (error) {
+    return json({error:error.message},502);
+  }
+}
+
 async function mcp(request, env) {
   let body;
   try { body = await request.json(); } catch { return rpc(null,null,{code:-32700,message:"Invalid JSON"}); }
@@ -61,6 +85,7 @@ export default {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname === "/mcp") return mcp(request,env);
     if (request.method === "GET" && url.pathname === "/api/quota") return json(await readQuota(env));
+    if (request.method === "GET" && url.pathname === "/api/github-day") return githubDay(url);
     if (request.method === "GET" && url.pathname === "/") return new Response(PAGE_PLACEHOLDER,{headers:{"content-type":"text/html; charset=utf-8"}});
     return new Response("Not found",{status:404});
   }
