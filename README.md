@@ -1,40 +1,48 @@
 # Dev Pulse
 
-Tableau de bord local pour suivre l’activité GitHub, les quotas Codex et les tâches récentes depuis un PC ou un Raspberry Pi.
+Dev Pulse est un tableau de bord web pensé pour un écran de suivi sur PC ou Raspberry Pi. Il réunit l’activité GitHub, les statistiques quotidiennes de code, les quotas Codex et un aperçu des tâches en cours.
 
-## Démarrer sur Windows
+## Fonctionnalités
 
-Cliquez droit sur `start.ps1`, choisissez **Exécuter avec PowerShell**, puis ouvrez <http://localhost:8787>. Cette version locale active aussi le bridge privé de quota Codex, accessible uniquement depuis ce PC.
+- flux public GitHub actualisé automatiquement ;
+- sélection d’une date et calcul des commits, lignes ajoutées et supprimées ;
+- affichage du quota Codex avec dernière valeur connue et état en ligne/hors ligne ;
+- interface plein écran adaptée à un écran de supervision ;
+- bridge local et version hébergée compatibles avec la même interface.
 
-Ou depuis PowerShell :
+## Démo
+
+La version personnelle est publiée sur [Dev Pulse](https://dev-pulse-fox.emmanuel-galland117.chatgpt.site). Les données de quota restent privées et ne font pas partie de ce dépôt.
+
+## Démarrage local
+
+Sous Windows, lancez `start.ps1`, puis ouvrez <http://localhost:8787>. Le serveur utilise uniquement les modules intégrés à Node.js et écoute sur la machine locale.
 
 ```powershell
-cd "C:\chemin\vers\dev-pulse"
 .\start.ps1
 ```
 
-## Connexion GitHub
+Copiez `data/quota.example.json` vers `data/quota.json` si vous voulez alimenter manuellement la carte de quota. Le vrai fichier est volontairement ignoré par Git.
 
-Cliquez sur l’avatar **FX** puis renseignez un nom d’utilisateur GitHub. L’application charge les événements publics toutes les 60 secondes. Aucun mot de passe ni token n’est stocké.
+Pour les statistiques GitHub privées, définissez éventuellement `GITHUB_TOKEN` avant de lancer le serveur. Le mode public ne demande aucun jeton.
 
-## Raspberry Pi
+## Version hébergée
 
-Copiez le dossier sur le Pi puis lancez :
+Le Worker dans `worker/index.js` sert l’interface, les statistiques GitHub quotidiennes et deux outils MCP pour lire ou mettre à jour le quota Codex. Les snapshots sont stockés dans une petite base D1 ; après vingt minutes sans signal du PC, l’interface conserve la dernière valeur et affiche « hors ligne ».
 
-```bash
-cd dev-pulse
-python3 -m http.server 8787 --bind 0.0.0.0
+Construisez l’artefact publiable avec :
+
+```powershell
+node scripts/build-worker.mjs
+node scripts/validate-artifact.mjs
 ```
 
-Ouvrez ensuite Chromium sur `http://localhost:8787` et passez en plein écran. Pour le mode kiosque automatique :
+Le manifeste public ne contient aucun identifiant de projet. La plateforme d’hébergement ajoute l’identifiant propre à chaque déploiement.
 
-```bash
-chromium --kiosk --app=http://localhost:8787
-```
+## Données et confidentialité
 
-## État des données
+L’identifiant GitHub sert uniquement à interroger les événements publics. Aucun mot de passe ou jeton GitHub n’est enregistré dans le navigateur. Les snapshots réels de quota et les identifiants de déploiement sont ignorés par Git.
 
-- **GitHub public** : réel et actualisé automatiquement après configuration.
-- **Quotas Codex** : lus depuis `data/quota.json` par le bridge local. L’actualisation Codex met ce fichier à jour périodiquement.
-- **Chats et tâches** : instantané local représentatif.
-- **Historique** : interaction prête ; la persistance complète et l’accès aux dépôts privés nécessitent un petit service local de synchronisation, prévu pour la prochaine version.
+## Licence
+
+Projet personnel publié pour être repris et adapté librement.
