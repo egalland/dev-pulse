@@ -1,4 +1,5 @@
 data/quota.json
+data/*.dpapi
 dist/
 .sites-runtime/
 node_modules/

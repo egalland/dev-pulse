@@ -102,6 +102,13 @@ async function mcp(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname === "/api/quota-sync") {
+      const expected = env.QUOTA_SYNC_TOKEN;
+      const authorization = request.headers.get("authorization");
+      if (!expected || authorization !== `Bearer ${expected}`) return json({error:"Non autorisé"},401);
+      try { return json(await updateQuota(env,await request.json())); }
+      catch (error) { return json({error:error.message},400); }
+    }
     if (request.method === "POST" && url.pathname === "/mcp") return mcp(request,env);
     if (request.method === "GET" && url.pathname === "/api/quota") return json(await readQuota(env));
     if (request.method === "GET" && url.pathname === "/api/github-day") return githubDay(url);
