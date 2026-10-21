@@ -30,7 +30,7 @@ Pour les statistiques GitHub privées, définissez éventuellement `GITHUB_TOKEN
 
 Le Worker dans `worker/index.js` sert l’interface, les statistiques GitHub quotidiennes et deux outils MCP pour lire ou mettre à jour le quota Codex. Les snapshots sont stockés dans une petite base D1 ; après vingt minutes sans signal du PC, l’interface conserve la dernière valeur et affiche « hors ligne ».
 
-Le script local `scripts/sync-quota.ps1` peut envoyer les mesures sans plugin personnel. Sa clé est chiffrée pour l’utilisateur Windows courant dans `data/quota-sync-token.dpapi`, un fichier toujours ignoré par Git.
+Le script local `scripts/sync-quota.ps1` peut envoyer les mesures sans plugin personnel. Ses clés sont chiffrées pour l’utilisateur Windows courant dans des fichiers `data/*.dpapi`, toujours ignorés par Git.
 
 Construisez l’artefact publiable avec :
 
